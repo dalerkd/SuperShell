@@ -1,5 +1,5 @@
 
-
+#include "SS.h"
 #include <windows.h>
 #include <stdio.h>
 #include <map>
@@ -9,20 +9,6 @@ using std::string;
 /*
 LoadLibrary("")
 */
-
-map<string,HMODULE> g_str_hm;
-
-int call()
-{
-	try
-	{
-	}
-	catch (...)
-	{
-		
-	}
-}
-
 
 
 int main()
@@ -35,4 +21,11 @@ int main()
 	3. 执行函数申请：遍历map找到函数地址了吗?Y:调用，N:返回。
 
 	*/
+
+	SS* p = new SS();
+	p->getInput();
+
+	delete(p);
+
+
 }

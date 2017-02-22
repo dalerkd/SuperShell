@@ -17,10 +17,10 @@ public:
 	void call();//执行调用
 	void LoadLib(string libName);//加载库
 	void ayaInput();//词法分析，语法分析
-	
+	void getInput();
 
 private:
 	map<string,HMODULE> m_str_hm;
-
+	string m_input;
 };
 
