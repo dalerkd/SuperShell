@@ -2,17 +2,41 @@
 //
 
 #include "stdafx.h"
+
+#include "Debug.h"
+
 #include <iostream>
 #include <string>
 
+
+
+
+
+int fun(double a,float b)
+{
+	return a+b;
+	
+
+}
+
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	std::string a = "LoadLibrary(\"Hi.dll\")";
+	/*
 
-	std::string::size_type index = a.find("(");
-	//std::string b = a.erase(0,index+1);
-	//index = a.find("\"");
-	a.erase(index);
+	printf("jiushidiao")
+	打算动态构造一个函数
+
+	_cdecl 我们回收
+	
+	puts('b');
+	
+	*/
+	
+	OutputDebug("%d",123);
+	
+
+
 	return 0;
 }
 

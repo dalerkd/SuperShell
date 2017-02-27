@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SuperShell", "SuperShell\SuperShell.vcxproj", "{5E45989A-795C-4071-9F01-3C887C68D971}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{26E3ECE4-68BE-4D78-8CA5-E7D30952477E}"
+	ProjectSection(SolutionItems) = preProject
+		DesignDiary_设计日志.md = DesignDiary_设计日志.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
