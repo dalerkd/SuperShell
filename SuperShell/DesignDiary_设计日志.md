@@ -1,17 +1,24 @@
 >关于设计方向的讨论
 >Discussion on design direction-Baidu or Google translate
+##2017-03-01
+星期三 0:59
+增加了以下功能：
+- String
+- char: like 'a'
+- ,	:参数分隔符
 
+由于可执行部分没有完成，以上增加均未能测试。
 
 ##2017-02-27
 我们已经支持如下内容的处理：
-\0
-Space
-Number(+Neg,-小数)
+- \0
+- Space
+- Number(+Neg,-小数)
 
 需要增加以下内容的处理：
-String
-char: like 'a'
-,	:参数分隔符
+- String
+- char: like 'a'
+- ,	:参数分隔符
 
 
 完成了:

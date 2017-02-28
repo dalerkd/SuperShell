@@ -20,8 +20,9 @@ enum ArgStyle
 
 struct argFormat
 {
-	ArgStyle	style;//arg Style
+	ArgStyle	style;//arg Style	
 	int			value;
+	char*		str;
 };
 
 class SS
@@ -59,12 +60,15 @@ private:
 	责任：如果你消耗了当前字符，请在最后处理指针并+1,Amazing和End除外;
 	*/
 	bool IsEnd(char*);		//\0
-
 	void IsSpace(char*);	//空格
-	void IsNumber(char*,bool IsNeg=false);	//Number
-	void IsNeg(char*);		//负数
-	void IsString(char*);
 
+	void IsNumber(char*,bool IsNeg=false);	//Number
+	void IsNeg(char*);		//负号
+
+	void IsString(char*);
+	void IsChar(char*);
+	bool HandleBackslash(char*,char& result);//处理\们反斜杠,bool,true处理成功,
+	
 
 	//////////////////////////////////////////
 

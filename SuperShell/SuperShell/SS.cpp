@@ -45,7 +45,7 @@ void SS::getInput()
 /*Input is a need execute function or load library? */
 bool SS::tryBeLib(string str)
 {
-	
+
 
 
 	string::size_type ret = str.find("LoadLibrary");
@@ -71,7 +71,7 @@ bool SS::tryBeLib(string str)
 			Error("Load Library Fault:%s",str);
 		}
 		return true;
-		
+
 	}
 	else
 	{
@@ -123,15 +123,33 @@ void SS::getArgcs(string argList)
 
 	for(;;++pArg)
 	{
+		char* tmp = pArg;
+
 		if (IsEnd(pArg))
 		{
 			break;
 		}
-		IsSpace(pArg);
+		IsSpace(pArg);//Need Be First
 		IsNumber(pArg);
 		IsNeg(pArg);
 
-		Error("What's mean:0x%x\n",*pArg);
+
+
+		if(*pArg=='}')
+		{
+			break;
+		}
+		if (*pArg==',')
+		{
+			++pArg;
+		}
+
+		if (tmp==pArg)//No man decide it
+		{
+			Error("What's mean:0x%x\n",*pArg);
+		}
+
+
 
 	}
 	return;
@@ -143,7 +161,7 @@ bool SS::tryBeFunc(string functionName)
 {
 	std::string str = functionName;
 	std::string str_2 = functionName;
-	
+
 	FARPROC funT = getFuncAddr(str_2);
 
 	string argList = str;
@@ -157,15 +175,15 @@ bool SS::tryBeFunc(string functionName)
 
 void SS::executeCode(FARPROC funT)
 {
-		/*
+	/*
 	string			"abc"	Point
 	char			'a'		Immediate number
 	unsigned int	324		Immediate number
 	int				-2222	Immediate number	hex,10, 8?
 	float			
 	double
-	
-	
+
+
 	*/
 
 	//Excute Code
@@ -248,14 +266,18 @@ void SS::IsNumber(char* pArg,bool neg)
 			}
 			else if(*pArg==0x20)
 			{
-				for (;*pArg!=0x20;++pArg){}	// del space
+				for (;*pArg==0x20;++pArg){}	// del space
 
-				if (*pArg!=',')//like:		234 ,    234 )
+				if (*pArg==',')//like:		234 ,    234 )
 				{
+					--pArg;
+					goto NUMBER_SAVE;
+
 				}
 				else if (*pArg=='}')
 				{
-					break;
+					--pArg;//keep next is '}'
+					goto NUMBER_SAVE;
 				}
 				else
 				{
@@ -291,6 +313,8 @@ void SS::IsNumber(char* pArg,bool neg)
 
 
 		}
+NUMBER_SAVE:
+
 		if (neg)
 		{
 			m_number*=-1;
@@ -316,6 +340,166 @@ void SS::IsNeg(char* p)
 	}
 }
 
+
+void SS::IsString(char* p)
+{
+	if (*p!='"')
+	{
+		return;
+	}
+
+	++p;
+	/*
+	if it is not "
+	\" don't is "
+
+	other:  \Number :this version don't permit.
+	\r
+	\n
+
+	"" be \0
+	*/
+	char* strStart = p;
+
+#define MAX_LENGTH_STRING 1024
+
+	//char result[MAX_LENGTH_STRING]={0};
+	char* result =(char*) malloc(MAX_LENGTH_STRING);
+	if (nullptr==result)
+	{
+		Error("No enough memory in malloc,SIZE:0x%x",MAX_LENGTH_STRING);
+	}
+	memset(result,MAX_LENGTH_STRING,0);
+
+	for (size_t i=0;;++i)
+	{
+		if (i>=MAX_LENGTH_STRING-10)
+		{
+			Error("So long string!");
+		}
+		char tmp;
+
+		if (HandleBackslash(p,tmp))
+		{
+			result[i]=tmp;
+		}
+		else if (*p=='"')//string end
+		{
+			break;
+		}
+		else if (*p=='\0')
+		{
+			Error("Terminate in unexpected!");
+		}
+		else
+		{
+			result[i]=*p;
+		}
+
+	}
+	
+	
+
+	argFormat tmp;
+	tmp.style = STRINGX;
+	tmp.str = result;
+
+	m_argVectorList.push_back(tmp);
+
+
+
+	++p;
+}
+
+void SS::IsChar(char* p)
+{
+	if (*p!='\'')
+	{
+		return;
+	}
+	++p;
+
+	int value=0;
+
+	char cTmp;
+	if (HandleBackslash(p,cTmp))
+	{
+		value=cTmp;
+	}
+	else if (*p=='"')//string end
+	{
+		Warning("two ' middle don't find anything.");
+		value=0;
+		goto CHAR_GO;
+	}
+	else if (*p=='\0')
+	{
+		Error("Terminate in unexpected!");
+	}
+	else
+	{
+		value=*p;
+	}
+	++p;
+
+	if (*p!='\'')
+	{
+		Error("Don't find  ' be end");
+	}
+CHAR_GO:
+	argFormat tmp;
+	tmp.style = CHARX;
+	tmp.value = value;
+
+	m_argVectorList.push_back(tmp);
+
+	++p;
+
+}
+
+bool SS::HandleBackslash(char* p,char& result)
+{
+	if (*p=='\\')
+	{
+		//TODO: More
+		++p;
+		switch (*p)
+		{
+		case '\\':
+			{
+				result='\\';
+				break;
+			}
+		case 'n':
+			{
+				result='\n';
+				break;
+			}
+		case 'r':
+			{
+				result='\r';
+				break;
+			}
+		case '"':
+			{
+				result='\'';
+				break;
+			}
+		case '\0':
+			{
+				Error("Terminate in unexpected!");
+				break;
+			}
+		default:
+			{
+				result=*p;
+				break;
+			}
+		}
+		return true;
+	}
+	return false;
+}
 
 //////////////////////////////////////////////////////////////////////////
 void SS::Error(char* fmt,...)
