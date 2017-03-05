@@ -21,8 +21,8 @@ enum ArgStyle
 struct argFormat
 {
 	ArgStyle	style;//arg Style	
-	int			value;
-	char*		str;
+	int			value;//only imm
+	char*		str;  //string point
 };
 
 class SS
@@ -32,7 +32,6 @@ public:
 	~SS(void);
 
 public:
-	void call();//执行调用
 	bool LoadLib(string libName);//加载库
 	void ayaInput();//词法分析，语法分析
 	void getInput();
@@ -59,15 +58,16 @@ private:
 	
 	责任：如果你消耗了当前字符，请在最后处理指针并+1,Amazing和End除外;
 	*/
-	bool IsEnd(char*);		//\0
-	void IsSpace(char*);	//空格
+	bool IsEnd(char*&);		//\0
+	void IsSpace(char*&);	//空格
 
-	void IsNumber(char*,bool IsNeg=false);	//Number
-	void IsNeg(char*);		//负号
+	void IsNumber(char*&,bool IsNeg=false);	//Number
+	void IsNeg(char*&);		//负号
 
-	void IsString(char*);
-	void IsChar(char*);
-	bool HandleBackslash(char*,char& result);//处理\们反斜杠,bool,true处理成功,
+	void IsString(char*&);
+	void IsChar(char*&);
+
+	bool HandleBackslash(char*&,char& result);//处理\们反斜杠,bool,true处理成功,
 	
 
 	//////////////////////////////////////////
@@ -76,7 +76,7 @@ private:
 	void Warning(char* fmt,...);
 	void Execute_error(char *fmt, ...);
 	void Handle_Exception(int stage,int level,char* fmt,va_list ap);
-
+	void clearArgAna();
 
 	/* 错误级别 */
 	enum e_ErrorLevel

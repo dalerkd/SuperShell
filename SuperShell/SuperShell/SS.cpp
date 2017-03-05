@@ -11,25 +11,17 @@ SS::SS(void)
 SS::~SS(void)
 {
 	//delete map HMOUDLE
+	//词法vector中string ,每一条指令都要执行本删除？
 }
 
-void SS::call()
-{
-	try
-	{
-	}
-	catch (...)
-	{
-
-	}
-}
 
 bool SS::LoadLib(string libName)
 {
 	HMODULE hm = LoadLibraryA(libName.c_str());
-	if (hm==INVALID_HANDLE_VALUE)return false;
+	if (hm==0)return false;
 
 	m_str_hm[libName]=hm;//insert
+	return true;
 }
 
 void SS::getInput()
@@ -37,7 +29,15 @@ void SS::getInput()
 	while(true)
 	{
 		std::getline(std::cin,m_input);
-		ayaInput();
+		try
+		{
+			ayaInput();
+		}
+		catch(...)
+		{
+			;
+		}
+		
 	}	
 
 }
@@ -56,19 +56,19 @@ bool SS::tryBeLib(string str)
 		We need LibName.
 		*/
 		std::string::size_type index = str.find("\"");
-		if (index==string::npos)return;
+		if (index==string::npos)return false;
 		str.erase(0,index+1);
 
 		index = str.find("\"");
-		if (index==string::npos)return;
+		if (index==string::npos)return false;
 		str.erase(index);
 
-		if(str.empty())return;
+		if(str.empty())return false;
 
 		bool result =LoadLib(str);
 		if (!result)
 		{
-			Error("Load Library Fault:%s",str);
+			Error("Load Library Fault:%s",str.c_str());
 		}
 		return true;
 
@@ -82,7 +82,7 @@ bool SS::tryBeLib(string str)
 FARPROC SS::getFuncAddr(string functionName)
 {
 	std::string::size_type LKindex = functionName.find("(");
-	if (LKindex==string::npos)return;
+	if (LKindex==string::npos)return nullptr;
 
 
 	functionName.erase(LKindex);
@@ -115,7 +115,7 @@ void SS::getArgcs(string argList)
 	}
 
 
-	argList.erase(0,LKindex);// 5,'a',"b")
+	argList.erase(0,LKindex+1);// 5,'a',"b")
 
 	char* pArg =(char*) argList.c_str();
 
@@ -132,16 +132,17 @@ void SS::getArgcs(string argList)
 		IsSpace(pArg);//Need Be First
 		IsNumber(pArg);
 		IsNeg(pArg);
+		IsChar(pArg);
+		IsString(pArg);
 
 
-
-		if(*pArg=='}')
+		if(*pArg==')')
 		{
 			break;
 		}
 		if (*pArg==',')
 		{
-			++pArg;
+			continue;
 		}
 
 		if (tmp==pArg)//No man decide it
@@ -163,12 +164,17 @@ bool SS::tryBeFunc(string functionName)
 	std::string str_2 = functionName;
 
 	FARPROC funT = getFuncAddr(str_2);
-
+	if (funT==nullptr)
+	{
+		Error("Don't find function:%s\n",str_2.c_str());
+	}
 	string argList = str;
 
 	getArgcs(argList);
 
 	executeCode(funT);
+
+	clearArgAna();
 
 	return true;
 }
@@ -187,7 +193,7 @@ void SS::executeCode(FARPROC funT)
 	*/
 
 	//Excute Code
-
+	if(0==m_argVectorList.size())
 	{
 		//zero argv
 
@@ -195,17 +201,127 @@ void SS::executeCode(FARPROC funT)
 
 		int_FUN_VOID funA = (int_FUN_VOID)funT;
 		if (funA==nullptr)return;
-
+		
+		DWORD CallResult=0;
 		try
 		{
-			funA();//temp to do,we need use SS::call()
+			CallResult = funA();//temp to do,we need use SS::call()
 		}
 		catch (...)
 		{
+			Execute_error("Execute function Happen,Line:%d",__LINE__);
 			return;
 		}
+
+		printf("result:0x%x",CallResult);
+		
+		
+		
 	}
+	else//Multi Argc
+	{
+		/*
+		Construct excute shellcode
+		
+		push ebp	55
+		mov ebp,esp	8B EC
+
+		mov dword ptr ds:[12345678],esp		89 25 78 56 34 12
+		
+		//ShellCode Start
+		push 0x12345678						68 78 56 34 12
+		push b
+		push c
+		call x								E8 offset small Little
+		
+		mov esp,dword ptr ds:[12345678]
+
+		
+		
+		can used to execute _cdecl & _stdcl
+
+		how to do?"mov xxx,esp"
+		we should protect esp
+		jmp ShellCode;
+	
+
+
+	核心是找到一个地方存放esp寄存器
+	1. malloc() 一个堆上的地址p，直接用 'mov p,esp'，在调用结束使用'mov esp,p'。
+	2. 由编译器来处理这件事，DWORD X;_asm mov X,esp;JMP shellcode;......BACK
+	如何BACK?
+
+	The core is to find a place to store the ESP register
+
+	1 malloc () a heap on the address P, directly with'mov P, esp', at the end of the call using'mov ESP, p'.
+
+	2 by the compiler to deal with this matter, DWORD X; _asm mov X, ESP; JMP shellcode;; BACK
+
+	How about BACK? 
+
+
+	So I chose the first one
+
+
+
+		*/
+
+		
+
+
+
+		//start
+
+		DWORD CallResult=0;
+		DWORD _espTmp=0;
+		
+		_asm mov _espTmp,esp;//Protect Esp
+
+		DWORD m_number = m_argVectorList.size();
+
+		//Press the stack from the last argument to the left
+		for (signed int i=m_number-1;i>=0;--i)
+		{
+			auto m_style = m_argVectorList[i].style;
+			switch (m_style)
+			{
+			case INTEGERX:
+				{
+					DWORD t=m_argVectorList[i].value;
+					_asm push t;
+					break;
+				}
+			case CHARX:
+				{
+					DWORD t=m_argVectorList[i].value;
+					_asm push t;
+					break;
+				}
+			case STRINGX:
+				{
+					DWORD t=(DWORD)m_argVectorList[i].str;
+					_asm push t;
+					break;
+				}
+			default:
+				Execute_error("Who know what's it");
+				break;
+			}
+
+
+		}
+		
+		_asm call funT;
+		_asm mov esp,_espTmp;//Repair Esp
+		_asm mov CallResult,eax;
+		printf("result:0x%x\n",CallResult);
+
+		
+	}
+
 }
+
+
 
 void SS::ayaInput()
 {
@@ -218,6 +334,7 @@ void SS::ayaInput()
 
 	if (tryBeLib(strTryBeLib))
 	{
+		printf("LoadLibrary successful\n");
 		return;
 	}
 
@@ -231,7 +348,7 @@ void SS::ayaInput()
 
 }
 
-bool SS::IsEnd(char* p)
+bool SS::IsEnd(char*& p)
 {
 	if (*p=='\0')
 	{
@@ -244,7 +361,7 @@ bool SS::IsEnd(char* p)
 
 }
 
-void SS::IsSpace(char* p)
+void SS::IsSpace(char*& p)
 {
 	if (*p==0x20)
 	{
@@ -252,7 +369,7 @@ void SS::IsSpace(char* p)
 	}	
 }
 
-void SS::IsNumber(char* pArg,bool neg)
+void SS::IsNumber(char*& pArg,bool neg)
 {
 	if (*pArg>=0x30&&*pArg<=0x39)//number			m_argVectorList
 	{
@@ -260,31 +377,11 @@ void SS::IsNumber(char* pArg,bool neg)
 		int m_number = 0;
 		for (;;++pArg)	
 		{
+			IsSpace(pArg);
+
 			if(*pArg>=0x30&&*pArg<=0x39)
 			{
 				m_number = m_number*10+*pArg-0x30;
-			}
-			else if(*pArg==0x20)
-			{
-				for (;*pArg==0x20;++pArg){}	// del space
-
-				if (*pArg==',')//like:		234 ,    234 )
-				{
-					--pArg;
-					goto NUMBER_SAVE;
-
-				}
-				else if (*pArg=='}')
-				{
-					--pArg;//keep next is '}'
-					goto NUMBER_SAVE;
-				}
-				else
-				{
-					Error("What's mean:0x%x\n",*pArg);
-					return; //err like: 234 2   or      234 :
-				}
-
 			}
 			else if (*pArg=='x'||*pArg=='X')//hex
 			{
@@ -292,17 +389,32 @@ void SS::IsNumber(char* pArg,bool neg)
 
 				if (m_number!=0)
 				{
-					Error("What's mean:'x' left dont is 0\n",*pArg);//like    (9x9)
+					Error("What's mean:'x'%c left dont is 0\n",*pArg);//like    (9x9)
 					return;
 				}
 				else//hex
 				{
-					for (;;++pArg)
+					for (;(*pArg<='9'&&*pArg>='0')||(*pArg<='F'&&*pArg>='A')||(*pArg<='f'&&*pArg>='a');++pArg)
 					{
 						m_number = m_number * 16 + (*pArg & 15) + (*pArg >= 'A' ? 9 : 0);
 					}
-					//warning: We can't find 0x7buay87 from err
+					IsSpace(pArg);
+					if (*pArg==')'||*pArg==',')
+					{
+						--pArg;
+						break;
+					}
+					else
+					{
+						Error("What's mean:0x%x\n",*pArg);//like  0x1g
+						break;
+					}
 				}
+			}
+			else if (*pArg==')'||*pArg==','||*pArg=='}')
+			{
+				--pArg;
+				break;
 			}
 			else
 			{
@@ -313,7 +425,6 @@ void SS::IsNumber(char* pArg,bool neg)
 
 
 		}
-NUMBER_SAVE:
 
 		if (neg)
 		{
@@ -331,7 +442,7 @@ NUMBER_SAVE:
 	}
 }
 
-void SS::IsNeg(char* p)
+void SS::IsNeg(char*& p)
 {
 	if (*p=='-')
 	{
@@ -341,7 +452,7 @@ void SS::IsNeg(char* p)
 }
 
 
-void SS::IsString(char* p)
+void SS::IsString(char*& p)
 {
 	if (*p!='"')
 	{
@@ -369,7 +480,7 @@ void SS::IsString(char* p)
 	{
 		Error("No enough memory in malloc,SIZE:0x%x",MAX_LENGTH_STRING);
 	}
-	memset(result,MAX_LENGTH_STRING,0);
+	memset(result,'\0',MAX_LENGTH_STRING);
 
 	for (size_t i=0;;++i)
 	{
@@ -385,6 +496,7 @@ void SS::IsString(char* p)
 		}
 		else if (*p=='"')//string end
 		{
+			result[i]='\0';
 			break;
 		}
 		else if (*p=='\0')
@@ -393,7 +505,7 @@ void SS::IsString(char* p)
 		}
 		else
 		{
-			result[i]=*p;
+			result[i]=*p++;
 		}
 
 	}
@@ -411,7 +523,7 @@ void SS::IsString(char* p)
 	++p;
 }
 
-void SS::IsChar(char* p)
+void SS::IsChar(char*& p)
 {
 	if (*p!='\'')
 	{
@@ -426,7 +538,7 @@ void SS::IsChar(char* p)
 	{
 		value=cTmp;
 	}
-	else if (*p=='"')//string end
+	else if (*p=='\'')//string end
 	{
 		Warning("two ' middle don't find anything.");
 		value=0;
@@ -457,7 +569,7 @@ CHAR_GO:
 
 }
 
-bool SS::HandleBackslash(char* p,char& result)
+bool SS::HandleBackslash(char*& p,char& result)
 {
 	if (*p=='\\')
 	{
@@ -496,6 +608,7 @@ bool SS::HandleBackslash(char* p,char& result)
 				break;
 			}
 		}
+		++p;
 		return true;
 	}
 	return false;
@@ -553,4 +666,9 @@ void SS::Handle_Exception(int stage,int level,char* fmt,va_list ap)
 		printf("Execut Error:%s\n",buf);
 		throw("Error");
 	}
+}
+
+void SS::clearArgAna()
+{
+	m_argVectorList.clear();
 }
