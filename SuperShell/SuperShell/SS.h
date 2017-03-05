@@ -44,7 +44,7 @@ public:
 	void executeCode(FARPROC X);//执行程序
 private:
 	map<string,HMODULE> m_str_hm;		//lib句柄表
-	vector<argFormat>   m_argVectorList;//词法分析结果
+	vector<argFormat>   m_argVectorList;//词法分析结果,在clearArgAna()被清理
 	
 	string m_input;
 

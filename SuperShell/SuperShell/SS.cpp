@@ -11,12 +11,23 @@ SS::SS(void)
 SS::~SS(void)
 {
 	//delete map HMOUDLE
-	//词法vector中string ,每一条指令都要执行本删除？
+	//词法vector中string ,每一条指令都要执行本删除？已经在clearArgAna()中处理
+	
+	map<string,HMODULE>::iterator iter;
+	for (iter = m_str_hm.begin();iter!=m_str_hm.end();++iter)
+	{
+		CloseHandle(iter->second);
+	}
+
 }
 
 
 bool SS::LoadLib(string libName)
 {
+	auto iter = m_str_hm.find(libName);
+	 if(iter!=m_str_hm.end())
+	 {Warning("Repetitive loading Library！");return true;}
+
 	HMODULE hm = LoadLibraryA(libName.c_str());
 	if (hm==0)return false;
 
@@ -45,9 +56,6 @@ void SS::getInput()
 /*Input is a need execute function or load library? */
 bool SS::tryBeLib(string str)
 {
-
-
-
 	string::size_type ret = str.find("LoadLibrary");
 	if (ret==0)
 	{
@@ -135,7 +143,6 @@ void SS::getArgcs(string argList)
 		IsChar(pArg);
 		IsString(pArg);
 
-
 		if(*pArg==')')
 		{
 			break;
@@ -149,9 +156,6 @@ void SS::getArgcs(string argList)
 		{
 			Error("What's mean:0x%x\n",*pArg);
 		}
-
-
-
 	}
 	return;
 }
@@ -213,10 +217,7 @@ void SS::executeCode(FARPROC funT)
 			return;
 		}
 
-		printf("result:0x%x",CallResult);
-		
-		
-		
+		printf("result:0x%x",CallResult);		
 	}
 	else//Multi Argc
 	{
@@ -236,40 +237,25 @@ void SS::executeCode(FARPROC funT)
 		
 		mov esp,dword ptr ds:[12345678]
 
-		
-		
 		can used to execute _cdecl & _stdcl
 
 		how to do?"mov xxx,esp"
 		we should protect esp
-		jmp ShellCode;
 	
-
-
 	核心是找到一个地方存放esp寄存器
 	1. malloc() 一个堆上的地址p，直接用 'mov p,esp'，在调用结束使用'mov esp,p'。
-	2. 由编译器来处理这件事，DWORD X;_asm mov X,esp;JMP shellcode;......BACK
-	如何BACK?
+	2. 由编译器来处理这件事，DWORD X;_asm mov X,esp;......
+
 
 	The core is to find a place to store the ESP register
 
 	1 malloc () a heap on the address P, directly with'mov P, esp', at the end of the call using'mov ESP, p'.
 
-	2 by the compiler to deal with this matter, DWORD X; _asm mov X, ESP; JMP shellcode;; BACK
-
-	How about BACK? 
-
+	2 by the compiler to deal with this matter, DWORD X; _asm mov X, ESP;
 
 	So I chose the first one
 
-
-
 		*/
-
-		
-
-
-
 		//start
 
 		DWORD CallResult=0;
@@ -509,16 +495,12 @@ void SS::IsString(char*& p)
 		}
 
 	}
-	
-	
 
 	argFormat tmp;
 	tmp.style = STRINGX;
 	tmp.str = result;
 
 	m_argVectorList.push_back(tmp);
-
-
 
 	++p;
 }
@@ -670,5 +652,18 @@ void SS::Handle_Exception(int stage,int level,char* fmt,va_list ap)
 
 void SS::clearArgAna()
 {
+	//clear Argcs
+	size_t m_NumberOfArray=m_argVectorList.size();
+
+	for (size_t i=0;i<m_NumberOfArray;++i)
+	{
+		if (m_argVectorList[i].style==STRINGX)
+		{
+			delete(m_argVectorList[i].str);
+		}
+
+	}
+
+
 	m_argVectorList.clear();
 }
