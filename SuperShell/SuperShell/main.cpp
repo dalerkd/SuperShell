@@ -23,6 +23,8 @@ int main()
 	*/
 
 	SS* p = new SS();
+
+	p->WelcomeInterface();
 	p->getInput();
 
 	delete(p);

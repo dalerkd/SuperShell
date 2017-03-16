@@ -320,7 +320,7 @@ void SS::ayaInput()
 
 	if (tryBeLib(strTryBeLib))
 	{
-		printf("LoadLibrary successful\n");
+		printf("    LoadLibrary successful!\n");
 		return;
 	}
 
@@ -559,11 +559,6 @@ bool SS::HandleBackslash(char*& p,char& result)
 		++p;
 		switch (*p)
 		{
-		case '\\':
-			{
-				result='\\';
-				break;
-			}
 		case 'n':
 			{
 				result='\n';
@@ -572,11 +567,6 @@ bool SS::HandleBackslash(char*& p,char& result)
 		case 'r':
 			{
 				result='\r';
-				break;
-			}
-		case '"':
-			{
-				result='\'';
 				break;
 			}
 		case '\0':
@@ -597,7 +587,21 @@ bool SS::HandleBackslash(char*& p,char& result)
 }
 
 //////////////////////////////////////////////////////////////////////////
-void SS::Error(char* fmt,...)
+
+void SS::Tips(char* fmt, ...)
+{
+	char buf[1024];
+
+	va_list ap;
+	va_start(ap, fmt);
+	vsprintf_s(buf,sizeof(buf),fmt,ap);
+
+	printf("%s\n",buf);
+
+	va_end(ap);
+}
+
+void SS::Error(char* fmt, ...)
 {
 	va_list ap;
 	va_start(ap,fmt);
@@ -608,7 +612,7 @@ void SS::Error(char* fmt,...)
 	throw("Error");
 }
 
-void SS::Warning(char* fmt,...)
+void SS::Warning(char* fmt, ...)
 {
 	va_list ap;
 	va_start(ap,fmt);
@@ -635,17 +639,17 @@ void SS::Handle_Exception(int stage,int level,char* fmt,va_list ap)
 	{
 		if (level==LEVEL_WARNING)
 		{
-			printf("Compair Warning:%s\n",buf);
+			printf("    Compair Warning:%s\n",buf);
 		}
 		else
 		{
-			printf("Compair Error:%s\n",buf);
+			printf("    Compair Error:%s\n",buf);
 			throw("Error");
 		}
 	}
 	else
 	{
-		printf("Execut Error:%s\n",buf);
+		printf("    Execut Error:%s\n",buf);
 		throw("Error");
 	}
 }
@@ -667,3 +671,20 @@ void SS::clearArgAna()
 
 	m_argVectorList.clear();
 }
+
+void SS::WelcomeInterface()
+{
+	//Font: small. http://patorjk.com/software/taag/
+	Tips("  ___                    ___ _        _ _			");
+	Tips(" / __|_  _ _ __  ___ _ _/ __| |_  ___| | | GitHub.com/dalerkd/SuperShell");
+	Tips(" \\__ \\ || | '_ \\/ -_) '_\\__ \\ ' \\/ -_) | | Usage: ");
+	Tips(" |___/\\_,_| .__/\\___|_| |___/_||_\\___|_|_|	LoadLibrary(\"AnyLib\")	");
+	Tips("          |_|					Execute any function");
+	Tips("				like:	LoadLibrary(\"user32.dll\");");
+	Tips("					MessageBoxA(0,\"First Tips\",\"Title\",0)");
+	Tips("");
+	Tips("");
+
+
+}
+

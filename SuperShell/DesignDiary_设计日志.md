@@ -1,5 +1,19 @@
 >关于设计方向的讨论
 >Discussion on design direction-Baidu or Google translate
+
+##2017-03-16
+1：只有\0\r\n需要特别处理,其他的需要放行.
+老的代码导致无法在字符串中传递",因为它被转换了。
+
+2. 增加一个启动界面，让人打开程序后起码知道这款软件是做什么的，怎么做。
+3. 增加ico，来自http://www.easyicon.net/569839-matte_white_square_icon_alphanumeric_letter_ss_icon.html
+4. 将上传一个Relase版exe。用于用户直接下载使用。
+
+##xxxx
+完成：
+1. 释放变量
+2. 错误信息打印
+
 ##2017-03-05
 它几乎已经完成了。
 

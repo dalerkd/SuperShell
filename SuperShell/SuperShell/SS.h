@@ -71,12 +71,13 @@ private:
 	
 
 	//////////////////////////////////////////
-
-	void Error(char* fmt,...);
-	void Warning(char* fmt,...);
+	void Tips(char* fmt, ...);
+	void Error(char* fmt, ...);
+	void Warning(char* fmt, ...);
 	void Execute_error(char *fmt, ...);
 	void Handle_Exception(int stage,int level,char* fmt,va_list ap);
 	void clearArgAna();
+
 
 	/* ´íÎó¼¶±ð */
 	enum e_ErrorLevel
@@ -91,5 +92,9 @@ private:
 		STAGE_COMPILE,
 		STAGE_LINK,
 	};
+
+public:
+	void WelcomeInterface();
+
 };
 
