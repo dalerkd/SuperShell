@@ -15,4 +15,4 @@ Now it is like:
 
 
 **Download it! Play it, Click it:**
-[SuperShell.exe](https://github.com/dalerkd/SuperShell/tree/master/SuperShell/Exe/SuperShell.exe)
+[SuperShell.exe](https://github.com/dalerkd/SuperShell/raw/master/SuperShell/Exe/SuperShell.exe)
