@@ -8,7 +8,7 @@ LoadLibrary("USER32.dll")
 MessageBoxA(0,"Something","Title",0)
 ```
 
-![](1.png)
+![](HowToDo.gif)
 
 Now it is like:
 ![](now.png)
